@@ -58,6 +58,9 @@ func parseVal(row bigtable.Row, rowMap map[string]bigtable.ReadItem, fs []*struc
 		if f.Kind() == reflect.Struct {
 			parseVal(row, rowMap, f.Fields())
 		} else {
+			if rowMap[ti.Column].Value == nil {
+				continue
+			}
 			if err = setValue(f, rowMap[ti.Column].Value); err != nil {
 				return
 			}

@@ -48,12 +48,16 @@ func TestReadRowErrorCase(t *testing.T) {
 			err := btawel.ReadItems(ris, &s)
 			require.Error(t, err)
 		})
+	})
 
+	t.Run("Error if type is different", func(t *testing.T) {
+		s := struct {
+			T int `bigtable:"fc:test"`
+		}{}
 		t.Run("ReadRow", func(t *testing.T) {
 			err := btawel.ReadRow(row, &s)
 			require.Error(t, err)
 		})
-
 	})
 
 	t.Run("Error if it uses unsupported type", func(t *testing.T) {
@@ -70,9 +74,7 @@ func TestReadRowErrorCase(t *testing.T) {
 			err := btawel.ReadItems(ris, &r)
 			require.Error(t, err)
 		})
-
 	})
-
 }
 
 func TestRead(t *testing.T) {
@@ -311,6 +313,42 @@ func TestReadRowNestedStruct(t *testing.T) {
 	require.Equal(t, int32(16), person.Age)
 }
 
+func TestReadButDataDoesntExists(t *testing.T) {
+	row := map[string][]bigtable.ReadItem{}
+
+	var person struct {
+		Name    string `bigtable:"info:name"`
+		Age     int32    `bigtable:"info:age"`
+	}
+	err := btawel.ReadRow(row, &person)
+
+	require.NoError(t, err)
+	require.Equal(t, "", person.Name)
+	require.Equal(t, int32(0), person.Age)
+}
+
+func TestReadButNotAllDataAreAvailable(t *testing.T) {
+
+	row := map[string][]bigtable.ReadItem{
+		"info": []bigtable.ReadItem{
+			bigtable.ReadItem{
+				Row:    "john",
+				Column: "info:name",
+				Value:  []byte("John"),
+			},
+		},
+	}
+
+	var person struct {
+		Name    string `bigtable:"info:name"`
+		Age     int32    `bigtable:"info:age"`
+	}
+	err := btawel.ReadRow(row, &person)
+
+	require.NoError(t, err)
+	require.Equal(t, "John", person.Name)
+	require.Equal(t, int32(0), person.Age)
+}
 
 func TestReadColumnQualifiers(t *testing.T) {
 
