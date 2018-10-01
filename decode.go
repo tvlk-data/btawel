@@ -13,6 +13,63 @@ import (
 	"cloud.google.com/go/bigtable"
 )
 
+// ReadRow converts bigtable.Row into a struct
+func ReadRow(row bigtable.Row, s interface{}) (err error) {
+
+	// create a map of bigtable readItem
+	// to make data lookup faster
+	rowMap := map[string]bigtable.ReadItem{}
+	var items map[string][]bigtable.ReadItem
+	items = row
+
+	for _, v := range items {
+		for _, item := range v {
+			rowMap[item.Column] = item
+		}
+	}
+
+	st := structs.New(s)
+	fs := st.Fields()
+
+	if err = parseVal(row, rowMap, fs); err != nil {
+		return
+	}
+	return
+}
+
+// recursively parse data for all fields of struct based on the tag the field has
+func parseVal(row bigtable.Row, rowMap map[string]bigtable.ReadItem, fs []*structs.Field) (err error) {
+
+	if len(fs) == 0 {
+		return
+	}
+
+	for _, f := range fs {
+		t := f.Tag(BigtableTagName)
+
+		ti := GetBigtableTagInfo(t)
+		if ti.RowKey {
+			if err = setValue(f, []byte(row.Key())); err != nil {
+				return
+			}
+			continue
+		}
+
+		if f.Kind() == reflect.Struct {
+			parseVal(row, rowMap, f.Fields())
+		} else {
+			if rowMap[ti.Column].Value == nil {
+				continue
+			}
+			if err = setValue(f, rowMap[ti.Column].Value); err != nil {
+				return
+			}
+			continue
+		}
+	}
+	return
+}
+
 // ReadColumnQualifier returns column qualifiers.
 func ReadColumnQualifier(ris []bigtable.ReadItem) (cqs []string) {
 
