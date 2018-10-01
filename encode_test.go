@@ -1,4 +1,4 @@
-package cloth
+package btawel_test
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/osamingo/boolconv"
+	"github.com/tvlk-data/btawel"
 )
 
 type CQ struct {
@@ -18,17 +19,17 @@ type CQ struct {
 func TestGenerateColumnQualifiersMutation(t *testing.T) {
 
 	// family is empty
-	if _, err := GenerateColumnQualifiersMutation("", time.Now(), ""); err == nil {
+	if _, err := btawel.GenerateColumnQualifiersMutation("", time.Now(), ""); err == nil {
 		t.Error("error isn't occurred")
 	}
 
 	// slice is nil
-	if _, err := GenerateColumnQualifiersMutation("fc", time.Now(), nil); err == nil {
+	if _, err := btawel.GenerateColumnQualifiersMutation("fc", time.Now(), nil); err == nil {
 		t.Error("error isn't occurred")
 	}
 
 	// slice is empty
-	if _, err := GenerateColumnQualifiersMutation("fc", time.Now(), []interface{}{}); err == nil {
+	if _, err := btawel.GenerateColumnQualifiersMutation("fc", time.Now(), []interface{}{}); err == nil {
 		t.Error("error isn't occurred")
 	}
 
@@ -42,7 +43,7 @@ func TestGenerateColumnQualifiersMutation(t *testing.T) {
 		&CQ{ID: "5", Qualifier: ""},
 	}
 
-	ret, err := GenerateColumnQualifiersMutation("fc", time.Now(), ss)
+	ret, err := btawel.GenerateColumnQualifiersMutation("fc", time.Now(), ss)
 	if err != nil {
 		t.Error("failed to GenerateColumnQualifiersMutation. msg =", err)
 	}
@@ -79,22 +80,22 @@ func TestGenerateColumnQualifiersMutation(t *testing.T) {
 func TestGenerateColumnsMutation(t *testing.T) {
 
 	// family is empty
-	if _, err := GenerateColumnsMutation("", time.Now(), nil); err == nil {
+	if _, err := btawel.GenerateColumnsMutation("", time.Now(), nil); err == nil {
 		t.Error("error isn't occurred")
 	}
 
 	// struct is nil
-	if _, err := GenerateColumnsMutation("fc", time.Now(), nil); err == nil {
+	if _, err := btawel.GenerateColumnsMutation("fc", time.Now(), nil); err == nil {
 		t.Error("error isn't occurred")
 	}
 
 	// struct hasn't fields
-	if _, err := GenerateColumnsMutation("fc", time.Now(), struct{}{}); err == nil {
+	if _, err := btawel.GenerateColumnsMutation("fc", time.Now(), struct{}{}); err == nil {
 		t.Error("error isn't occurred")
 	}
 
 	// filed is unsupported type
-	if _, err := GenerateColumnsMutation("fc", time.Now(), struct {
+	if _, err := btawel.GenerateColumnsMutation("fc", time.Now(), struct {
 		S map[string]interface{} `bigtable:"wrong"`
 	}{
 		map[string]interface{}{
@@ -137,7 +138,7 @@ func TestGenerateColumnsMutation(t *testing.T) {
 		TNonTag:  "test3",
 	}
 
-	ret, err := GenerateColumnsMutation("fc", time.Now(), &s)
+	ret, err := btawel.GenerateColumnsMutation("fc", time.Now(), &s)
 	if err != nil {
 		t.Error("failed to GenerateColumnsMutation. msg =", err)
 	}

@@ -1,4 +1,4 @@
-package cloth
+package btawel_test
 
 import (
 	"bytes"
@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/osamingo/boolconv"
-	"google.golang.org/cloud/bigtable"
+
+	"github.com/tvlk-data/btawel"
+	"cloud.google.com/go/bigtable"
 )
 
 func TestReadColumnQualifiers(t *testing.T) {
@@ -24,7 +26,7 @@ func TestReadColumnQualifiers(t *testing.T) {
 		},
 	}
 
-	cqs := ReadColumnQualifier(ris)
+	cqs := btawel.ReadColumnQualifier(ris)
 
 	if len(cqs) != 2 {
 		t.Error("result length should be 2")
@@ -49,7 +51,7 @@ func TestReadItemsErrorCase(t *testing.T) {
 		R bigtable.ReadItem `bigtable:",rowkey"`
 	}{}
 
-	err := ReadItems(nil, nil)
+	err := btawel.ReadItems(nil, nil)
 	if err != nil {
 		t.Error("error should be nil")
 	}
@@ -62,17 +64,17 @@ func TestReadItemsErrorCase(t *testing.T) {
 		},
 	}
 
-	err = ReadItems(ris, struct{}{})
+	err = btawel.ReadItems(ris, struct{}{})
 	if err != nil {
 		t.Error("error should be nil")
 	}
 
-	err = ReadItems(ris, &s)
+	err = btawel.ReadItems(ris, &s)
 	if err == nil {
 		t.Error("error is occurred")
 	}
 
-	err = ReadItems(ris, &r)
+	err = btawel.ReadItems(ris, &r)
 	if err == nil {
 		t.Error("error is occurred")
 	}
@@ -221,7 +223,7 @@ func TestReadItems(t *testing.T) {
 		Value:  buf.Bytes(),
 	})
 
-	err := ReadItems(ris, &s)
+	err := btawel.ReadItems(ris, &s)
 	if err != nil {
 		t.Error("error should not be nil")
 	}

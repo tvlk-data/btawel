@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/abema/cloth"
 	"golang.org/x/net/context"
-	"google.golang.org/cloud"
-	"google.golang.org/cloud/bigtable"
-	"google.golang.org/cloud/bigtable/bttest"
+
 	"google.golang.org/grpc"
+	"github.com/tvlk-data/btawel"
+	"cloud.google.com/go/bigtable/bttest"
+	"google.golang.org/api/option"
+	"cloud.google.com/go/bigtable"
 )
 
 const (
@@ -37,7 +38,7 @@ func init() {
 
 	var err error
 
-	srv, err = bttest.NewServer()
+	srv, err = bttest.NewServer("localhost:0")
 	if err != nil {
 		panic(err)
 	}
@@ -48,7 +49,7 @@ func init() {
 	}
 
 	ctx := context.Background()
-	admin, err := bigtable.NewAdminClient(ctx, project, zone, cluster, cloud.WithBaseGRPC(conn))
+	admin, err := bigtable.NewAdminClient(ctx, project, cluster, option.WithGRPCConn(conn))
 	if err != nil {
 		panic(err)
 	}
@@ -85,7 +86,7 @@ func main() {
 	}
 
 	// generate a client
-	client, err := bigtable.NewClient(context.Background(), project, zone, cluster, cloud.WithBaseGRPC(conn))
+	client, err := bigtable.NewClient(context.Background(), project, cluster, option.WithGRPCConn(conn))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -93,7 +94,7 @@ func main() {
 	defer client.Close()
 
 	// generate Mutation
-	mutation, err := cloth.GenerateColumnsMutation(cf, time.Now(), &user)
+	mutation, err := btawel.GenerateColumnsMutation(cf, time.Now(), &user)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -115,7 +116,7 @@ func main() {
 
 	// convert
 	target := User{}
-	err = cloth.ReadItems(row[cf], &target)
+	err = btawel.ReadItems(row[cf], &target)
 	if err != nil {
 		fmt.Println(err)
 		return

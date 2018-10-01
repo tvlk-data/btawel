@@ -1,4 +1,4 @@
-package cloth
+package btawel
 
 import (
 	"bytes"
@@ -9,7 +9,8 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/osamingo/boolconv"
-	"google.golang.org/cloud/bigtable"
+
+	"cloud.google.com/go/bigtable"
 )
 
 // GenerateColumnsMutation generates Mutation from Struct.
