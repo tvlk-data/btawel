@@ -1,10 +1,7 @@
 # Cloth
 
-[![Build Status](https://img.shields.io/circleci/project/abema/cloth/master.svg?style=flat)](https://circleci.com/gh/abema/cloth)
-[![Coverage Status](https://img.shields.io/codecov/c/github/abema/cloth/master.svg?style=flat)](https://codecov.io/github/abema/cloth)
-[![Go Report Card](http://goreportcard.com/badge/abema/cloth)](http://goreportcard.com/report/abema/cloth)
-[![GoDoc](https://godoc.org/github.com/abema/cloth?status.svg)](https://godoc.org/github.com/abema/cloth)
-[![GitHub license](https://img.shields.io/github/license/abema/cloth.svg)](https://github.com/abema/cloth/blob/master/LICENSE)
+[![GoDoc](https://godoc.org/github.com/tvlk-data/btawel?status.svg)](https://godoc.org/github.com/tvlk-data/btawel)
+[![GitHub license](https://img.shields.io/github/license/tvlk-data/btawel.svg)](https://github.com/tvlk-data/btawel/blob/master/LICENSE)
 
 **Under development**
 
@@ -13,7 +10,7 @@ ORM over [Cloud Bigtable](https://cloud.google.com/bigtable/) by Golang
 ## Installation
 
 ```
-$ go get -u github.com/abema/cloth
+$ go get -u github.com/tvlk-data/btawel
 ```
 
 ## Quick Start
@@ -162,6 +159,32 @@ func main() {
 		fmt.Println("CreatedAt:\tOK")
 	}
 }
+```
+
+## Additional Feature: Nested Struct
+
+This feature is only applicable in reading mode. You can't use this feature to create mutation.
+
+```go
+type Address struct {
+	Address string `bigtable:"address:address"`
+}
+
+type Person struct {
+	Name    string `bigtable:"info:name"`
+	Age     int32    `bigtable:"info:age"`
+	Address Address
+}
+
+
+var person Person
+
+//row is bigtable.Row
+err := btawel.ReadRow(row, &person)
+
+fmt.Println(person.Name)
+fmt.Println(person.Address.Address)
+...
 ```
 
 ## License
