@@ -9,6 +9,7 @@ import (
 
 	"github.com/tvlk-data/btawel"
 	"cloud.google.com/go/bigtable"
+	"fmt"
 )
 
 func TestReadColumnQualifiers(t *testing.T) {
@@ -78,6 +79,58 @@ func TestReadItemsErrorCase(t *testing.T) {
 	if err == nil {
 		t.Error("error is occurred")
 	}
+
+}
+
+type Info struct {
+	Name string `bigtable:"info:name"`
+	//Address Address
+}
+
+type Address struct {
+	Address string `bigtable:"address:address"`
+}
+
+type Person struct {
+	RowKey string `bigtable:",rowkey"`
+	Info Info
+	Address Address
+	//Test2 string `bigtable:"info:test"`
+	//Test string
+}
+
+func TestNested(t *testing.T) {
+
+	row := map[string][]bigtable.ReadItem{
+		"info": []bigtable.ReadItem{
+			bigtable.ReadItem{
+				Row:    "john",
+				Column: "info:name",
+				Value:  []byte("John"),
+			},
+			bigtable.ReadItem{
+				Row:    "john",
+				Column: "info:test",
+				Value:  []byte("ASIK GILE"),
+			},
+		},
+		"address": []bigtable.ReadItem{
+			bigtable.ReadItem{
+				Row:    "john",
+				Column: "address:address",
+				Value:  []byte("Rafless st."),
+			},
+		},
+	}
+
+	var person Person
+
+	err := btawel.ReadRow(row, &person)
+	if err != nil {
+		t.Error("error should not be nil")
+	}
+
+	fmt.Println(person)
 
 }
 

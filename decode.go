@@ -24,6 +24,84 @@ func ReadColumnQualifier(ris []bigtable.ReadItem) (cqs []string) {
 	return
 }
 
+func ReadRow(row bigtable.Row, s interface{}) (err error) {
+	rowMap := map[string]bigtable.ReadItem{}
+
+	var items map[string][]bigtable.ReadItem
+	items = row
+
+	for _, v := range items {
+		for _, item := range v {
+			rowMap[item.Column] = item
+		}
+	}
+
+
+	st := structs.New(s)
+
+	fs := st.Fields()
+	if len(fs) == 0 {
+		return
+	}
+
+	for _, f := range fs {
+
+		t := f.Tag(BigtableTagName)
+
+		//if t == "" {
+		//	continue
+		//}
+
+
+		ti := GetBigtableTagInfo(t)
+		if ti.RowKey {
+			if err = setValue(f, []byte(row.Key())); err != nil {
+				return
+			}
+			continue
+		}
+
+
+		if f.Kind() == reflect.Struct {
+			fmt.Printf("Struct: %v ---- \n", f.Name())
+			test(rowMap, f.Fields())
+		} else {
+			fmt.Printf("Non Struct : %v ----- \n", ti.Column)
+
+			if err = setValue(f, rowMap[ti.Column].Value); err != nil {
+				return
+			}
+
+			continue
+		}
+
+	}
+
+	return nil
+}
+
+func test(m map[string]bigtable.ReadItem, fields []*structs.Field) (err error) {
+
+	for _, f := range fields {
+		ti := GetBigtableTagInfo(f.Tag(BigtableTagName))
+
+		if f.Kind() == reflect.Struct {
+			test(m, f.Fields())
+			fmt.Printf("%v got struct\n", f.Name())
+		} else {
+			fmt.Printf("%v got non struct\n", f.Name())
+			if e := setValue(f, m[ti.Column].Value); e != nil {
+				return
+			}
+			continue
+		}
+
+	}
+	return
+}
+
+
+
 // ReadItems converts Mutation into Struct.
 func ReadItems(ris []bigtable.ReadItem, s interface{}) (err error) {
 
