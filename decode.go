@@ -45,6 +45,7 @@ func parseVal(row bigtable.Row, rowMap map[string]bigtable.ReadItem, fs []*struc
 	}
 
 	for _, f := range fs {
+
 		t := f.Tag(BigtableTagName)
 
 		ti := GetBigtableTagInfo(t)
@@ -55,12 +56,14 @@ func parseVal(row bigtable.Row, rowMap map[string]bigtable.ReadItem, fs []*struc
 			continue
 		}
 
+
 		if f.Kind() == reflect.Struct {
 			parseVal(row, rowMap, f.Fields())
 		} else {
 			if rowMap[ti.Column].Value == nil {
 				continue
 			}
+
 			if err = setValue(f, rowMap[ti.Column].Value); err != nil {
 				return
 			}
@@ -119,17 +122,131 @@ func ReadItems(ris []bigtable.ReadItem, s interface{}) (err error) {
 
 				continue
 			}
-
 		}
-
 	}
+	return
+}
 
+func setPointerValue(f *structs.Field, val []byte) (err error) {
+
+	aType := reflect.TypeOf(f.Value())
+	ptr := reflect.New(aType)
+
+	switch reflect.ValueOf(f.Value()).Type().Elem().Kind() {
+	case reflect.String:
+
+		s := string(val)
+
+		ptr.Elem().Set(reflect.ValueOf(&s))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Int:
+
+		var n int64
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		v := int(n)
+		ptr.Elem().Set(reflect.ValueOf(&v))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Bool:
+		b := boolconv.BtoB(val).Tob()
+
+		ptr.Elem().Set(reflect.ValueOf(&b))
+		f.Set(ptr.Elem().Interface())
+
+
+	case reflect.Uint:
+		var n uint64
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		v := uint(n)
+		ptr.Elem().Set(reflect.ValueOf(&v))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Int8:
+		var n int8
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		v := int8(n)
+		ptr.Elem().Set(reflect.ValueOf(&v))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Uint8:
+		var n uint8
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		ptr.Elem().Set(reflect.ValueOf(&n))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Int16:
+		var n int16
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		ptr.Elem().Set(reflect.ValueOf(&n))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Uint16:
+		var n uint16
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		ptr.Elem().Set(reflect.ValueOf(&n))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Int32:
+		var n int32
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		ptr.Elem().Set(reflect.ValueOf(&n))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Uint32:
+		var n uint32
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		ptr.Elem().Set(reflect.ValueOf(&n))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Int64:
+		var n int64
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		ptr.Elem().Set(reflect.ValueOf(&n))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Uint64:
+		var n uint64
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		ptr.Elem().Set(reflect.ValueOf(&n))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Float32:
+		var n float32
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		ptr.Elem().Set(reflect.ValueOf(&n))
+		f.Set(ptr.Elem().Interface())
+
+	case reflect.Float64:
+		var n float64
+		err = binary.Read(bytes.NewReader(val), binary.BigEndian, &n)
+
+		ptr.Elem().Set(reflect.ValueOf(&n))
+		f.Set(ptr.Elem().Interface())
+
+	default:
+		err = fmt.Errorf("cloth: unsupported pointer type. %v", f.Kind())
+	}
 	return
 }
 
 func setValue(f *structs.Field, val []byte) (err error) {
 
 	switch f.Kind() {
+
+	case reflect.Ptr:
+		err = setPointerValue(f, val)
 
 	case reflect.Slice:
 		if reflect.ValueOf(f.Value()).Type().Elem().Kind() == reflect.Uint8 {
